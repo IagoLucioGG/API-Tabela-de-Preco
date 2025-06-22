@@ -4,6 +4,7 @@ using APICrudEspecifica.DTOs;
 using APICrudEspecifica.Data;
 using Microsoft.EntityFrameworkCore;
 using APICrudEspecifica.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace APICrudEspecifica.Controllers
 {
@@ -18,8 +19,9 @@ namespace APICrudEspecifica.Controllers
             _context = context;
         }
 
+        [Authorize(Policy = "Cadastrar")]
         [HttpPost]
-        public async Task<ActionResult<RegraCondicionalDTO>> Post(RegraCondicionalDTO dto)
+        public async Task<ActionResult<ResponseModel<RegraCondicional>>> Post(RegraCondicionalDTO dto)
         {
             try
             {
@@ -35,46 +37,78 @@ namespace APICrudEspecifica.Controllers
                 _context.RegrasCondicional.Add(regra);
                 await _context.SaveChangesAsync();
 
-                return CreatedAtAction(nameof(GetById), new { id = regra.IdRegraCondicional }, regra);
+                return CreatedAtAction(nameof(GetById), new { id = regra.IdRegraCondicional }, new ResponseModel<RegraCondicional>
+                {
+                    Status = true,
+                    Mensagem = "Regra condicional cadastrada com sucesso.",
+                    Dados = regra
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Mensagem = "Erro interno no servidor.", Erro = ex.Message });
+                return StatusCode(500, new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = "Erro interno no servidor.",
+                    Dados = ex.Message
+                });
             }
         }
 
+        [Authorize(Policy = "Consultar")]
         [HttpGet("{id}")]
-        public async Task<ActionResult<RegraCondicional>> GetById(int id)
+        public async Task<ActionResult<ResponseModel<RegraCondicional>>> GetById(int id)
         {
             var regra = await _context.RegrasCondicional.FindAsync(id);
 
             if (regra == null)
             {
-                return NotFound(new { Mensagem = ExceptionRegraCondicional.RegraNaoEncontrada });
+                return NotFound(new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = ExceptionRegraCondicional.RegraNaoEncontrada,
+                    Dados = null
+                });
             }
 
-            return Ok(regra);
+            return Ok(new ResponseModel<RegraCondicional>
+            {
+                Status = true,
+                Mensagem = "Regra condicional encontrada com sucesso.",
+                Dados = regra
+            });
         }
 
+        [Authorize(Policy = "Consultar")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RegraCondicional>>> Get()
+        public async Task<ActionResult<ResponseModel<IEnumerable<RegraCondicional>>>> Get()
         {
             var regras = await _context.RegrasCondicional.ToListAsync();
 
             if (!regras.Any())
             {
-                return NotFound(new { Mensagem = ExceptionRegraCondicional.RegraNaoEncontrada });
+                return NotFound(new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = ExceptionRegraCondicional.RegraNaoEncontrada,
+                    Dados = null
+                });
             }
 
-            return Ok(regras);
+            return Ok(new ResponseModel<IEnumerable<RegraCondicional>>
+            {
+                Status = true,
+                Mensagem = "Regras condicionais encontradas com sucesso.",
+                Dados = regras
+            });
         }
 
+        [Authorize(Policy = "Consultar")]
         [HttpGet("filtrar")]
-        public async Task<ActionResult<IEnumerable<RegraCondicional>>> Filtrar(
+        public async Task<ActionResult<ResponseModel<IEnumerable<RegraCondicional>>>> Filtrar(
             [FromQuery] int? idRegraPrecificacao,
             [FromQuery] string? condicaoTipo,
-            [FromQuery] string? tipoAjuste
-        )
+            [FromQuery] string? tipoAjuste)
         {
             var query = _context.RegrasCondicional.AsQueryable();
 
@@ -91,20 +125,36 @@ namespace APICrudEspecifica.Controllers
 
             if (!resultados.Any())
             {
-                return NotFound(new { Mensagem = ExceptionRegraCondicional.RegraNaoEncontrada });
+                return NotFound(new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = ExceptionRegraCondicional.RegraNaoEncontrada,
+                    Dados = null
+                });
             }
 
-            return Ok(resultados);
+            return Ok(new ResponseModel<IEnumerable<RegraCondicional>>
+            {
+                Status = true,
+                Mensagem = "Regras condicionais filtradas com sucesso.",
+                Dados = resultados
+            });
         }
 
+        [Authorize(Policy = "Editar")]
         [HttpPut("{id}")]
-        public async Task<ActionResult> Put(int id, RegraCondicionalDTO dto)
+        public async Task<ActionResult<ResponseModel<RegraCondicional>>> Put(int id, RegraCondicionalDTO dto)
         {
             var regra = await _context.RegrasCondicional.FindAsync(id);
 
             if (regra == null)
             {
-                return NotFound(new { Mensagem = ExceptionRegraCondicional.RegraNaoEncontrada });
+                return NotFound(new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = ExceptionRegraCondicional.RegraNaoEncontrada,
+                    Dados = null
+                });
             }
 
             regra.IdRegraPrecificacao = dto.IdRegraPrecificacao;
@@ -115,23 +165,39 @@ namespace APICrudEspecifica.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(regra);
+            return Ok(new ResponseModel<RegraCondicional>
+            {
+                Status = true,
+                Mensagem = "Regra condicional atualizada com sucesso.",
+                Dados = regra
+            });
         }
 
+        [Authorize(Policy = "Deletar")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
+        public async Task<ActionResult<ResponseModel<object>>> Delete(int id)
         {
             var regra = await _context.RegrasCondicional.FindAsync(id);
 
             if (regra == null)
             {
-                return NotFound(new { Mensagem = ExceptionRegraCondicional.RegraNaoEncontrada });
+                return NotFound(new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = ExceptionRegraCondicional.RegraNaoEncontrada,
+                    Dados = null
+                });
             }
 
             _context.RegrasCondicional.Remove(regra);
             await _context.SaveChangesAsync();
 
-            return Ok(new { Mensagem = ExceptionRegraCondicional.RegraRemovida });
+            return Ok(new ResponseModel<object>
+            {
+                Status = true,
+                Mensagem = ExceptionRegraCondicional.RegraRemovida,
+                Dados = null
+            });
         }
     }
 }

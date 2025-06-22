@@ -4,6 +4,7 @@ using APICrudEspecifica.DTOs;
 using APICrudEspecifica.Data;
 using Microsoft.EntityFrameworkCore;
 using APICrudEspecifica.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace APICrudEspecifica.Controllers
 {
@@ -18,8 +19,9 @@ namespace APICrudEspecifica.Controllers
             _context = context;
         }
 
+        [Authorize(Policy = "Cadastrar")]
         [HttpPost]
-        public async Task<ActionResult<PrecoBaseProdutoDTO>> Post(PrecoBaseProdutoDTO dto)
+        public async Task<ActionResult<ResponseModel<PrecoBaseProduto>>> Post(PrecoBaseProdutoDTO dto)
         {
             try
             {
@@ -37,42 +39,75 @@ namespace APICrudEspecifica.Controllers
                 _context.PrecosBaseProdutos.Add(preco);
                 await _context.SaveChangesAsync();
 
-                return CreatedAtAction(nameof(GetById), new { id = preco.IdPrecoBaseProduto }, preco);
+                return CreatedAtAction(nameof(GetById), new { id = preco.IdPrecoBaseProduto }, new ResponseModel<PrecoBaseProduto>
+                {
+                    Status = true,
+                    Mensagem = "Preço base cadastrado com sucesso.",
+                    Dados = preco
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Mensagem = "Erro interno no servidor.", Erro = ex.Message });
+                return StatusCode(500, new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = "Erro interno no servidor.",
+                    Dados = ex.Message
+                });
             }
         }
 
+        [Authorize(Policy = "Consultar")]
         [HttpGet("{id}")]
-        public async Task<ActionResult<PrecoBaseProduto>> GetById(int id)
+        public async Task<ActionResult<ResponseModel<PrecoBaseProduto>>> GetById(int id)
         {
             var preco = await _context.PrecosBaseProdutos.FindAsync(id);
 
             if (preco == null)
             {
-                return NotFound(new { Mensagem = ExceptionPrecoBase.PrecoBaseNaoEncontrado });
+                return NotFound(new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = ExceptionPrecoBase.PrecoBaseNaoEncontrado,
+                    Dados = null
+                });
             }
 
-            return Ok(preco);
+            return Ok(new ResponseModel<PrecoBaseProduto>
+            {
+                Status = true,
+                Mensagem = "Preço base encontrado com sucesso.",
+                Dados = preco
+            });
         }
 
+        [Authorize(Policy = "Consultar")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PrecoBaseProduto>>> Get()
+        public async Task<ActionResult<ResponseModel<IEnumerable<PrecoBaseProduto>>>> Get()
         {
             var precos = await _context.PrecosBaseProdutos.ToListAsync();
 
             if (!precos.Any())
             {
-                return NotFound(new { Mensagem = ExceptionPrecoBase.PrecoBaseNaoEncontrado });
+                return NotFound(new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = ExceptionPrecoBase.PrecoBaseNaoEncontrado,
+                    Dados = null
+                });
             }
 
-            return Ok(precos);
+            return Ok(new ResponseModel<IEnumerable<PrecoBaseProduto>>
+            {
+                Status = true,
+                Mensagem = "Preços base encontrados com sucesso.",
+                Dados = precos
+            });
         }
 
+        [Authorize(Policy = "Consultar")]
         [HttpGet("filtrar")]
-        public async Task<ActionResult<IEnumerable<PrecoBaseProduto>>> Filtrar(
+        public async Task<ActionResult<ResponseModel<IEnumerable<PrecoBaseProduto>>>> Filtrar(
             [FromQuery] int? idProduto,
             [FromQuery] int? idFamilia,
             [FromQuery] bool? ativo,
@@ -100,20 +135,36 @@ namespace APICrudEspecifica.Controllers
 
             if (!resultados.Any())
             {
-                return NotFound(new { Mensagem = ExceptionPrecoBase.PrecoBaseNaoEncontrado });
+                return NotFound(new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = ExceptionPrecoBase.PrecoBaseNaoEncontrado,
+                    Dados = null
+                });
             }
 
-            return Ok(resultados);
+            return Ok(new ResponseModel<IEnumerable<PrecoBaseProduto>>
+            {
+                Status = true,
+                Mensagem = "Preços filtrados com sucesso.",
+                Dados = resultados
+            });
         }
 
+        [Authorize(Policy = "Editar")]
         [HttpPut("{id}")]
-        public async Task<ActionResult> Put(int id, PrecoBaseProdutoDTO dto)
+        public async Task<ActionResult<ResponseModel<PrecoBaseProduto>>> Put(int id, PrecoBaseProdutoDTO dto)
         {
             var preco = await _context.PrecosBaseProdutos.FindAsync(id);
 
             if (preco == null)
             {
-                return NotFound(new { Mensagem = ExceptionPrecoBase.PrecoBaseNaoEncontrado });
+                return NotFound(new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = ExceptionPrecoBase.PrecoBaseNaoEncontrado,
+                    Dados = null
+                });
             }
 
             preco.ValorBase = dto.ValorBase;
@@ -126,23 +177,39 @@ namespace APICrudEspecifica.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(preco);
+            return Ok(new ResponseModel<PrecoBaseProduto>
+            {
+                Status = true,
+                Mensagem = "Preço base atualizado com sucesso.",
+                Dados = preco
+            });
         }
 
+        [Authorize(Policy = "Deletar")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
+        public async Task<ActionResult<ResponseModel<object>>> Delete(int id)
         {
             var preco = await _context.PrecosBaseProdutos.FindAsync(id);
 
             if (preco == null)
             {
-                return NotFound(new { Mensagem = ExceptionPrecoBase.PrecoBaseNaoEncontrado });
+                return NotFound(new ResponseModel<object>
+                {
+                    Status = false,
+                    Mensagem = ExceptionPrecoBase.PrecoBaseNaoEncontrado,
+                    Dados = null
+                });
             }
 
             _context.PrecosBaseProdutos.Remove(preco);
             await _context.SaveChangesAsync();
 
-            return Ok(new { Mensagem = ExceptionPrecoBase.PrecoBaseDeletado });
+            return Ok(new ResponseModel<object>
+            {
+                Status = true,
+                Mensagem = ExceptionPrecoBase.PrecoBaseDeletado,
+                Dados = null
+            });
         }
     }
 }

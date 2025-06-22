@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APICrudEspecifica.Data
 {
+
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions options) : base(options) { }
@@ -14,12 +15,8 @@ namespace APICrudEspecifica.Data
         public DbSet<RegraFaixaQuantidade> RegrasFaixaQuantidade { get; set; }
         public DbSet<RegraPrecificacao> RegrasPrecificacao { get; set; }
         public DbSet<RegraCondicional> RegrasCondicional { get; set; }
+        public DbSet<HistoricoPrecoCalculado> HistoricosPrecos { get; set; }
+        public DbSet<Usuario> Usuarios { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-
-           
-        }
     }
 }

@@ -4,6 +4,7 @@ using APICrudEspecifica.DTOs;
 using APICrudEspecifica.Data;
 using Microsoft.EntityFrameworkCore;
 using APICrudEspecifica.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace APICrudEspecifica.Controllers
 {
@@ -17,7 +18,7 @@ namespace APICrudEspecifica.Controllers
         {
             _context = context;
         }
-
+        [Authorize(Policy = "Cadastrar")]
         [HttpPost]
         public async Task<ActionResult<RegraPrecificacaoDTO>> Post(RegraPrecificacaoDTO dto)
         {
@@ -48,6 +49,7 @@ namespace APICrudEspecifica.Controllers
             }
         }
 
+        [Authorize(Policy = "Consultar")]
         [HttpGet("{id}")]
         public async Task<ActionResult<RegraPrecificacao>> GetById(int id)
         {
@@ -61,6 +63,7 @@ namespace APICrudEspecifica.Controllers
             return Ok(regra);
         }
 
+        [Authorize(Policy = "Consultar")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RegraPrecificacao>>> Get()
         {
@@ -74,6 +77,7 @@ namespace APICrudEspecifica.Controllers
             return Ok(regras);
         }
 
+        [Authorize(Policy = "Consultar")]
         [HttpGet("filtrar")]
         public async Task<ActionResult<IEnumerable<RegraPrecificacao>>> Filtrar(
             [FromQuery] int? idProduto,
@@ -110,6 +114,7 @@ namespace APICrudEspecifica.Controllers
             return Ok(resultados);
         }
 
+        [Authorize(Policy = "Editar")]
         [HttpPut("{id}")]
         public async Task<ActionResult> Put(int id, RegraPrecificacaoDTO dto)
         {
@@ -136,6 +141,7 @@ namespace APICrudEspecifica.Controllers
             return Ok(regra);
         }
 
+        [Authorize(Policy = "Deletar")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id)
         {
