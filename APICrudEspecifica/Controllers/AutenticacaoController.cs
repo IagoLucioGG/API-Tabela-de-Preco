@@ -72,10 +72,12 @@ namespace APICrudEspecifica.Controllers
                 });
             }
 
-            if (dto.Permissoes == "ADMIN")
+            if (dto.Permissoes == "ADMIN" || dto.Permissoes == "Admin" || dto.Permissoes == "admin")
             {
                 dto.Permissoes = "CONSULTAR,DELETAR,CADASTRAR,EDITAR";
             }
+
+            
 
             var usuario = new Usuario
             {

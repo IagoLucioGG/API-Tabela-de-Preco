@@ -144,20 +144,36 @@ namespace APICrudEspecifica.Controllers
 
                 if (historico != null && (DateTime.Now - historico.DataCalculo).TotalDays <= 7)
                 {
-                    var condicionalLista = JsonSerializer.Deserialize<List<CondicionalDTO>>(historico.CondicionaisUtilizadasJSON);
+                    // Extrai os movimentos do resultado formatado (ex: "Venda:10---Troca:20")
+                    var movimentosHistorico = historico.ResultadoFormatado
+                        .Split("---", StringSplitOptions.RemoveEmptyEntries)
+                        .Select(m => m.Split(":")[0].Trim())
+                        .ToList();
 
-                    return Ok(new ResponseModel<object>
+                    // Normaliza ambas listas para comparação
+                    var recebidos = dados.DescricoesMovComercial.Select(m => m.Trim()).ToList();
+
+                    bool listasIguais = !movimentosHistorico.Except(recebidos).Any()
+                                        && !recebidos.Except(movimentosHistorico).Any();
+
+                    if (listasIguais)
                     {
-                        Status = true,
-                        Mensagem = "Consulta retornada do histórico.",
-                        Dados = new
+                        var condicionalLista = JsonSerializer.Deserialize<List<CondicionalDTO>>(historico.CondicionaisUtilizadasJSON);
+
+                        return Ok(new ResponseModel<object>
                         {
-                            Produto = new { historico.NomeProduto, historico.CodigoProduto },
-                            CondicionalUtilizada = condicionalLista,
-                            historico.ResultadoFormatado
-                        }
-                    });
+                            Status = true,
+                            Mensagem = "Consulta retornada do histórico.",
+                            Dados = new
+                            {
+                                Produto = new { historico.NomeProduto, historico.CodigoProduto },
+                                CondicionalUtilizada = condicionalLista,
+                                historico.ResultadoFormatado
+                            }
+                        });
+                    }
                 }
+
             }
 
             // Etapa 5: Salvar histórico com as condicionais usadas
